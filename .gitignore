@@ -1,0 +1,11 @@
+# Бинарники Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.env
+.env
+.idea/
