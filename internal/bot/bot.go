@@ -128,9 +128,14 @@ func Start() {
 			// Проверяем, если это команда для смены языка
 			fmt.Println("Message Received:", update.Message.Text)
 			if update.Message.IsCommand() && update.Message.Command() == "start" {
+				userID := update.Message.From.ID
+				lang := userLangs[userID]
+				if lang == "" {
+					lang = "ua" // По умолчанию украинский
+				}
 				msg := tgbotapi.NewMessage(
 					update.Message.Chat.ID,
-					messages["ua"]["start"],
+					messages[lang]["start"],
 				)
 				msg.ReplyMarkup = createLanguageKeyboard()
 				bot.Send(msg)
