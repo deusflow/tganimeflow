@@ -138,7 +138,9 @@ func Start() {
 				msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, messages["da"]["lang_changed"])
 				bot.Send(msg)
 			}
-			// Обработка текстовых сообщений
+		}
+		// Обработка текстовых сообщений
+		if update.Message != nil {
 			if update.Message.IsCommand() && update.Message.Command() == "start" {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Оберіть мову / Choose language / Vælg sprog:")
 				msg.ReplyMarkup = createLanguageKeyboard()
