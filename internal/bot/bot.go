@@ -12,31 +12,31 @@ import (
 )
 
 // тут будет запрос к API аниме и манги
-func searchAnime(query string) string {
+func searchAnime(query string, lang string) string {
 	url := fmt.Sprintf("https://api.jikan.moe/v4/anime?q=%s&limit=1", query)
 	response, err := http.Get(url)
 	if err != nil {
 		log.Println("Error fetching data from Jikan API:", err)
-		return messages["ua"]["api_error"]
+		return messages[lang]["api_error"]
 	}
 
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return messages["ua"]["read_error"]
+		return messages[lang]["read_error"]
 	}
 	var result JikanResponse
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return messages["ua"]["json_error"]
+		return messages[lang]["json_error"]
 	}
 	if len(result.Data) == 0 {
-		return messages["ua"]["not_found"]
+		return messages[lang]["not_found"]
 	}
 
 	anime := result.Data[0]
-	return fmt.Sprintf(messages["ua"]["anime_found"], anime.Title, anime.Score)
+	return fmt.Sprintf(messages[lang]["anime_found"], anime.Title, anime.Score)
 }
 
 // Структура для разбора ответа от Jikan API
@@ -121,44 +121,82 @@ func Start() {
 	u.Timeout = 60
 
 	updates := bot.GetUpdatesChan(u)
+	userLangs := make(map[int64]string) // userID -> выбранный язык
 
 	for update := range updates {
 		if update.Message != nil {
+			// Проверяем, если это команда для смены языка
 			fmt.Println("Message Received:", update.Message.Text)
-		}
-		// Обработка нажатий на inline-кнопки
-		if update.CallbackQuery != nil {
-			if update.CallbackQuery.Data == "lang_ua" {
-				msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, messages["ua"]["lang_changed"])
-				bot.Send(msg)
-			} else if update.CallbackQuery.Data == "lang_en" {
-				msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, messages["en"]["lang_changed"])
-				bot.Send(msg)
-			} else if update.CallbackQuery.Data == "lang_da" {
-				msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, messages["da"]["lang_changed"])
-				bot.Send(msg)
-			}
-		}
-		// Обработка текстовых сообщений
-		if update.Message != nil {
 			if update.Message.IsCommand() && update.Message.Command() == "start" {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Оберіть мову / Choose language / Vælg sprog:")
+				msg := tgbotapi.NewMessage(
+					update.Message.Chat.ID,
+					messages["ua"]["start"],
+				)
 				msg.ReplyMarkup = createLanguageKeyboard()
 				bot.Send(msg)
 				// Отправляем приветственное сообщение и берем его из messages map
 			} else if update.Message.IsCommand() && update.Message.Command() == "help" {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, messages["ua"]["help"])
+				userID := update.Message.From.ID
+				lang := userLangs[userID]
+				if lang == "" {
+					lang = "ua" // По умолчанию украинский
+				}
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, messages[lang]["help"])
 				bot.Send(msg)
 
 			} else if !update.Message.IsCommand() {
+				userID := update.Message.From.ID
+				chatID := update.Message.Chat.ID
+				lang := userLangs[userID]
+				if lang == "" {
+					lang = "ua"
+				}
+
 				if update.Message.Text == "" {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, messages["ua"]["empty_message"])
+					// если пустой текст
+					msg := tgbotapi.NewMessage(
+						chatID,
+						messages[lang]["empty_message"],
+					)
 					bot.Send(msg)
 				} else {
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, searchAnime(update.Message.Text))
+					// передаём и query, и lang
+					msg := tgbotapi.NewMessage(
+						chatID,
+						searchAnime(update.Message.Text, lang),
+					)
 					bot.Send(msg)
 				}
+
 			}
+
+		}
+		// Обработка нажатий на inline-кнопки
+
+		if update.CallbackQuery != nil {
+			userID := update.CallbackQuery.From.ID
+			chatID := update.CallbackQuery.Message.Chat.ID
+
+			// Сохраняем выбранный язык
+			switch update.CallbackQuery.Data {
+			case "lang_ua":
+				userLangs[userID] = "ua"
+			case "lang_en":
+				userLangs[userID] = "en"
+			case "lang_da":
+				userLangs[userID] = "da"
+			}
+
+			// Берём текущий язык пользователя
+			lang := userLangs[userID]
+
+			// Отправляем подтверждение смены языка
+			msg := tgbotapi.NewMessage(chatID, messages[lang]["lang_changed"])
+			bot.Send(msg)
+
+			// Отправляем приветствие на новом языке
+			greet := tgbotapi.NewMessage(chatID, messages[lang]["start"])
+			bot.Send(greet)
 		}
 	}
 }
