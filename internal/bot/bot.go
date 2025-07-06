@@ -39,7 +39,31 @@ func searchAnime(query string, lang string) string {
 	return fmt.Sprintf(messages[lang]["anime_found"], anime.Title, anime.Score)
 }
 
-// Структура для разбора ответа от Jikan API
+func getRandomAnime(lang string) string {
+	url := "https://api.jikan.moe/v4/anime/random"
+	response, err := http.Get(url)
+	if err != nil {
+		log.Println("Error fetching random anime from Jikan API:", err)
+		return messages[lang]["api_error"]
+	}
+
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return messages[lang]["read_error"]
+	}
+	// Структура для случайного аниме ответа
+	var result RandomAnimeResponse
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return messages[lang]["json_error"]
+	}
+
+	return fmt.Sprintf(messages[lang]["anime_found"], result.Data.Title, result.Data.Score)
+}
+
+// AnimeData Структура для разбора ответа от Jikan API
 type AnimeData struct {
 	Title string  `json:"title"`
 	Score float64 `json:"score"`
@@ -47,6 +71,10 @@ type AnimeData struct {
 
 type JikanResponse struct {
 	Data []AnimeData `json:"data"`
+}
+
+type RandomAnimeResponse struct {
+	Data AnimeData `json:"data"`
 }
 
 // Создает кнопки выбора языка
@@ -62,6 +90,38 @@ func createLanguageKeyboard() tgbotapi.InlineKeyboardMarkup {
 	)
 }
 
+func getTopAnime(lang string) string {
+	url := "https://api.jikan.moe/v4/top/anime?limit=5"
+	response, err := http.Get(url)
+	if err != nil {
+		log.Println("Error fetching top anime from Jikan API:", err)
+		return messages[lang]["api_error"]
+	}
+
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return messages[lang]["read_error"]
+	}
+
+	var result JikanResponse
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return messages[lang]["json_error"]
+	}
+
+	if len(result.Data) == 0 {
+		return messages[lang]["not_found"]
+	}
+
+	topAnime := messages[lang]["top_anime"] + "\n\n"
+	for i, anime := range result.Data {
+		topAnime += fmt.Sprintf("%d. %s - ⭐ %.1f\n", i+1, anime.Title, anime.Score)
+	}
+	return topAnime
+}
+
 // Тексты на разных языках
 var messages = map[string]map[string]string{
 	"ua": {
@@ -74,6 +134,8 @@ var messages = map[string]map[string]string{
 		"not_found":     "Аніме не знайдено. Спробуй іншу назву, може щось більш EPIC?",
 		"anime_found":   "🎌 Назва: %s\n⭐ Рейтинг: %.1f",
 		"lang_changed":  "🌍 Мову змінено на солов'їна! Пощебечемо разом, rebel-чан!",
+		"random_anime":  "🎲 Видкусіньке аніме для тебе мій пупсику:",
+		"top_anime":     "🏆 Топ аніме:",
 	},
 	"en": {
 		"start":         "Hmm... Who dares to disturb the DeusAnimeFlow bot? 💀\n\nAlright... I'm *Anime Finder Bot*, your personal dark guide to the anime world. Write a title, and I'll find it faster than you can say 'Sugoi'.\n\nBut remember... if it's boring anime — I'll snort. 😏\n\nLet's go searching, rebel-chan!",
@@ -85,6 +147,8 @@ var messages = map[string]map[string]string{
 		"not_found":     "Anime not found. Try another title, maybe something more EPIC?",
 		"anime_found":   "🎌 Title: %s\n⭐ Rating: %.1f",
 		"lang_changed":  "🌍 Language changed to English! Now I'll speak with you in English, rebel-chan!",
+		"random_anime":  "🎲 Random anime for you:",
+		"top_anime":     "🏆 Top anime:",
 	},
 	"da": {
 		"start":         "Hvem tør forstyrre DeusAnimeFlow-botten? 💀\n\nOkay da... Jeg er *Anime Finder Bot*, din personlige mørke guide til anime-verdenen. Skriv en titel, og jeg finder det hurtigere, end du kan sige 'Sugoi'.\n\nMen husk... hvis det er kedelig anime — så fnyster jeg. 😏\n\nLad os søge, rebel-chan!",
@@ -96,6 +160,8 @@ var messages = map[string]map[string]string{
 		"not_found":     "Anime ikke fundet. Prøv en anden titel — måske noget mere EPISK?",
 		"anime_found":   "🎌 Titel: %s\n⭐ Bedømmelse: %.1f",
 		"lang_changed":  "🌍 Sproget er nu ændret til dansk! Klar til at snakke med mig, rebel-chan? Rødgrød med fløde, huh?! 😏🇩🇰",
+		"random_anime":  "🎲 Tilfældig anime til dig:",
+		"top_anime":     "🏆 Top anime:",
 	},
 }
 
@@ -147,6 +213,15 @@ func Start() {
 					lang = "ua" // По умолчанию украинский
 				}
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, messages[lang]["help"])
+				bot.Send(msg)
+
+			} else if update.Message.IsCommand() && update.Message.Command() == "random" {
+				userID := update.Message.From.ID
+				lang := userLangs[userID]
+				if lang == "" {
+					lang = "ua" // По умолчанию украинский
+				}
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, getRandomAnime(lang))
 				bot.Send(msg)
 
 			} else if !update.Message.IsCommand() {
