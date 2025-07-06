@@ -40,7 +40,7 @@ func searchAnime(query string, lang string) string {
 }
 
 func getRandomAnime(lang string) string {
-	url := "https://api.jikan.moe/v4/anime/random"
+	url := "https://api.jikan.moe/v4/random/anime"
 	response, err := http.Get(url)
 	if err != nil {
 		log.Println("Error fetching random anime from Jikan API:", err)
@@ -50,6 +50,7 @@ func getRandomAnime(lang string) string {
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
+	log.Println("Random API Response:", string(body))
 	if err != nil {
 		return messages[lang]["read_error"]
 	}
