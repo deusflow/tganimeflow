@@ -50,7 +50,7 @@ func getRandomAnime(lang string) string {
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
-	log.Println("Random API Response:", string(body))
+
 	if err != nil {
 		return messages[lang]["read_error"]
 	}
@@ -167,6 +167,7 @@ var messages = map[string]map[string]string{
 }
 
 func Start() {
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Panic("Loading error .env file")
@@ -223,6 +224,14 @@ func Start() {
 					lang = "ua" // По умолчанию украинский
 				}
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, getRandomAnime(lang))
+				bot.Send(msg)
+			} else if update.Message.IsCommand() && update.Message.Command() == "top" {
+				userID := update.Message.From.ID
+				lang := userLangs[userID]
+				if lang == "" {
+					lang = "ua" // По умолчанию украинский
+				}
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, getTopAnime(lang))
 				bot.Send(msg)
 
 			} else if !update.Message.IsCommand() {
