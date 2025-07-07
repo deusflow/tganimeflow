@@ -36,7 +36,7 @@ func searchAnime(query string, lang string) string {
 	}
 
 	anime := result.Data[0]
-	return fmt.Sprintf(messages[lang]["anime_found"], anime.Title, anime.Score)
+	return formatAnimeDetails(anime, lang)
 }
 
 func getRandomAnime(lang string) string {
@@ -60,14 +60,22 @@ func getRandomAnime(lang string) string {
 	if err != nil {
 		return messages[lang]["json_error"]
 	}
-
-	return fmt.Sprintf(messages[lang]["anime_found"], result.Data.Title, result.Data.Score)
+	anime := result.Data
+	return formatAnimeDetails(anime, lang)
 }
 
 // AnimeData Структура для разбора ответа от Jikan API
 type AnimeData struct {
-	Title string  `json:"title"`
-	Score float64 `json:"score"`
+	Title    string  `json:"title"`
+	Score    float64 `json:"score"`
+	Synopsis string  `json:"synopsis"`
+	Episodes int     `json:"episodes"`
+	Status   string  `json:"status"`
+	Genres   []Genre `json:"genres"`
+}
+
+type Genre struct {
+	Name string `json:"name"`
 }
 
 type JikanResponse struct {
@@ -121,6 +129,39 @@ func getTopAnime(lang string) string {
 		topAnime += fmt.Sprintf("%d. %s - ⭐ %.1f\n", i+1, anime.Title, anime.Score)
 	}
 	return topAnime
+}
+
+func formatAnimeDetails(anime AnimeData, lang string) string {
+	// Форматирую жанры в строку
+	genresText := ""
+	for i, genre := range anime.Genres {
+		if i > 0 {
+			genresText += ", "
+		}
+		genresText += genre.Name
+	}
+
+	//кол-во серий
+	episodesText := "?" // если серий нет, то будет "?"
+	if anime.Episodes > 0 {
+		episodesText = fmt.Sprintf("%d", anime.Episodes)
+	}
+
+	//описание ограничиваем длину
+	synopsis := anime.Synopsis
+	if len(synopsis) > 200 {
+		synopsis = synopsis[:200] + "..."
+	}
+
+	return fmt.Sprintf(
+		"🎌 %s\n⭐ %.1f\n📺 %s серій\n📊 %s\n🎭 %s\n\n📝 %s",
+		anime.Title,
+		anime.Score,
+		episodesText,
+		anime.Status,
+		genresText,
+		synopsis,
+	)
 }
 
 // Тексты на разных языках
