@@ -99,6 +99,32 @@ func createLanguageKeyboard() tgbotapi.InlineKeyboardMarkup {
 	)
 }
 
+// Создает кнопки быстрых действий на нужном языке
+func createQuickActionsKeyboard(lang string) tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(messages[lang]["btn_random"], "action_random"),
+			tgbotapi.NewInlineKeyboardButtonData(messages[lang]["btn_top"], "action_top"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(messages[lang]["btn_search"], "action_search"),
+		),
+	)
+}
+
+// Создает кнопки для донатов
+func createDonateKeyboard() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("💳 PayPal", "https://paypal.me/deusflowro"),
+			tgbotapi.NewInlineKeyboardButtonURL("📱 MobilePay", "https://qr.mobilepay.dk/box/d017b43a-052e-4884-8fd6-851349b234a2/pay-in"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("❤️ Дякую!", "donate_thanks"),
+		),
+	)
+}
+
 func getTopAnime(lang string) string {
 	url := "https://api.jikan.moe/v4/top/anime?limit=5"
 	response, err := http.Get(url)
@@ -167,43 +193,58 @@ func formatAnimeDetails(anime AnimeData, lang string) string {
 // Тексты на разных языках
 var messages = map[string]map[string]string{
 	"ua": {
-		"start":         "Хмм... Кто тут такой смелый, чтобы потревожить DeusAnimeFlow бота? 💀\n\nНу ладно... Я — *Anime Finder Bot*, твой личный тёмный проводник в мире аниме. Напиши название, и я найду его быстрее, чем ты скажешь 'Sugoi'.\n\nНо учти… если это скучное аниме — я фыркну. 😏\n\nПогнали искать, rebel-чан!",
-		"help":          "🌀 Ти активував СТЕНД *ANIME FINDER*! 🌀\n\nЭтот бот создан для тех, кто ищет своё аниме-предназначение. Напиши название аниме или манги — и Я, твой персональный стенд, выдам тебе:\n🎯 Название\n📊 Рейтинг\n💥 (в будущем — жанр и описание)\n\n💬 Команды, достойные Джостара:\n/start — *Призови стенд!*\n/help — *Вызови силу мудрости!*",
-		"empty_message": "А щож тут так пусто, трясця богу? Розширь свої володіння, напиши назву аніме і я його знайду! Не будь таким ледащим, rebel-чан!",
-		"api_error":     "Сталася помилка при пошуку аніме. Спробуй пізніше, rebel-чан.",
-		"read_error":    "Помилка читання відповіді від API. Може, сервер втомився? Чи це Kuromi знову шалить?",
-		"json_error":    "Помилка розбору JSON відповіді від API. Може, сервер вирішив поговорити на своєму таємному діалекті?",
-		"not_found":     "Аніме не знайдено. Спробуй іншу назву, може щось більш EPIC?",
-		"anime_found":   "🎌 Назва: %s\n⭐ Рейтинг: %.1f",
-		"lang_changed":  "🌍 Мову змінено на солов'їна! Пощебечемо разом, rebel-чан!",
-		"random_anime":  "🎲 Видкусіньке аніме для тебе мій пупсику:",
-		"top_anime":     "🏆 Топ аніме:",
+		"start":          "Хмм... Хіто тут такий сміливий, щоб відволікати могутнього DeusAnimeFlow бота? 💀\n\nНу доообре... Я — *Anime Finder Bot*, твій особистий таємний провідник у пітьму. Напиши назву, та я знайду його швидше, ніж ти вигукнеш 'Sugoi'.\n\n на нудні аніме - фиркаю 😏\n\n Погнали, rebel-чан!",
+		"help":           "🌀 Ти активував СТЕНД *ANIME FINDER*! 🌀\n\nЭтот бот создан для тех, кто ищет своё аниме-предназначение. Напиши название аниме или манги — и Я, твой персональный стенд, выдам тебе:\n🎯 Название\n📊 Рейтинг\n💥 (в будущем — жанр и описание)\n\n💬 Команды, достойные Джостара:\n/start — *Призови стенд!*\n/help — *Вызови силу мудрости!*",
+		"empty_message":  "А щож тут так пусто, трясця богу? Розширь свої володіння, напиши назву аніме і я його знайду! Не будь таким ледащим, rebel-чан!",
+		"api_error":      "Сталася помилка при пошуку аніме. Спробуй пізніше, rebel-чан.",
+		"read_error":     "Помилка читання відповіді від API. Може, сервер втомився? Чи це Kuromi знову шалить?",
+		"json_error":     "Помилка розбору JSON відповіді від API. Може, сервер вирішив поговорити на своєму таємному діалекті?",
+		"not_found":      "Аніме не знайдено. Спробуй іншу назву, може щось більш EPIC?",
+		"anime_found":    "🎌 Назва: %s\n⭐ Рейтинг: %.1f",
+		"lang_changed":   "🌍 Мову змінено на солов'їна! Пощебечемо разом, rebel-чан!",
+		"random_anime":   "🎲 Видкусіньке аніме для тебе мій пупсику:",
+		"top_anime":      "🏆 Топ аніме:",
+		"donate_message": "💖 Подобається бот? Підтримай розробника!\n\n🌟 Твоя підтримка допомагає розвивати бота та додавати нові функції!\n\nОбери зручний спосіб:",
+		"donate_thanks":  "💖 Дякую за підтримку, rebel-чан! Ти крутий! 🔥",
+		"btn_random":     "🎲 Випадкове",
+		"btn_top":        "🏆 Топ",
+		"btn_search":     "🔄 Новий пошук",
 	},
 	"en": {
-		"start":         "Hmm... Who dares to disturb the DeusAnimeFlow bot? 💀\n\nAlright... I'm *Anime Finder Bot*, your personal dark guide to the anime world. Write a title, and I'll find it faster than you can say 'Sugoi'.\n\nBut remember... if it's boring anime — I'll snort. 😏\n\nLet's go searching, rebel-chan!",
-		"help":          "🌀 You activated STAND *ANIME FINDER*! 🌀\n\nThis bot is created for those who seek their anime destiny. Write anime or manga title — and I, your personal stand, will give you:\n🎯 Title\n📊 Rating\n💥 (in future — genre and description)\n\n💬 Commands worthy of Joestar:\n/start — *Summon the stand!*\n/help — *Call the power of wisdom!*",
-		"empty_message": "What's so empty here, for crying out loud? Expand your domain, write anime title and I'll find it! Don't be so lazy, rebel-chan!",
-		"api_error":     "Error occurred while searching anime. Try later, rebel-chan.",
-		"read_error":    "Error reading API response. Maybe server got tired? Or is Kuromi messing around again?",
-		"json_error":    "Error parsing JSON response from API. Maybe server decided to speak its secret dialect?",
-		"not_found":     "Anime not found. Try another title, maybe something more EPIC?",
-		"anime_found":   "🎌 Title: %s\n⭐ Rating: %.1f",
-		"lang_changed":  "🌍 Language changed to English! Now I'll speak with you in English, rebel-chan!",
-		"random_anime":  "🎲 Random anime for you:",
-		"top_anime":     "🏆 Top anime:",
+		"start":          "Hmm... Who dares to disturb the DeusAnimeFlow bot? 💀\n\nAlright... I'm *Anime Finder Bot*, your personal dark guide to the anime world. Write a title, and I'll find it faster than you can say 'Sugoi'.\n\nBut remember... if it's boring anime — I'll snort. 😏\n\nLet's go searching, rebel-chan!",
+		"help":           "🌀 You activated STAND *ANIME FINDER*! 🌀\n\nThis bot is created for those who seek their anime destiny. Write anime or manga title — and I, your personal stand, will give you:\n🎯 Title\n📊 Rating\n💥 (in future — genre and description)\n\n💬 Commands worthy of Joestar:\n/start — *Summon the stand!*\n/help — *Call the power of wisdom!*",
+		"empty_message":  "What's so empty here, for crying out loud? Expand your domain, write anime title and I'll find it! Don't be so lazy, rebel-chan!",
+		"api_error":      "Error occurred while searching anime. Try later, rebel-chan.",
+		"read_error":     "Error reading API response. Maybe server got tired? Or is Kuromi messing around again?",
+		"json_error":     "Error parsing JSON response from API. Maybe server decided to speak its secret dialect?",
+		"not_found":      "Anime not found. Try another title, maybe something more EPIC?",
+		"anime_found":    "🎌 Title: %s\n⭐ Rating: %.1f",
+		"lang_changed":   "🌍 Language changed to English! Now I'll speak with you in English, rebel-chan!",
+		"random_anime":   "🎲 Random anime for you:",
+		"top_anime":      "🏆 Top anime:",
+		"donate_message": "💖 Like the bot? Support the creator!\n\n🌟 Your power-up helps us grow and unlock new features!\n\nChoose your favorite way to support:",
+		"donate_thanks":  "💖 Arigato for your support, rebel-chan! You're awesome! 🔥",
+		"btn_random":     "🎲 Random",
+		"btn_top":        "🏆 Top",
+		"btn_search":     "🔄 New search",
 	},
 	"da": {
-		"start":         "Hvem tør forstyrre DeusAnimeFlow-botten? 💀\n\nOkay da... Jeg er *Anime Finder Bot*, din personlige mørke guide til anime-verdenen. Skriv en titel, og jeg finder det hurtigere, end du kan sige 'Sugoi'.\n\nMen husk... hvis det er kedelig anime — så fnyster jeg. 😏\n\nLad os søge, rebel-chan!",
-		"help":          "🌀 Du har aktiveret STANDEN *ANIME FINDER*! 🌀\n\nDenne bot er skabt til dem, der søger deres anime-skæbne. Skriv titlen på en anime eller manga — og jeg, din personlige stand, vil give dig:\n🎯 Titel\n📊 Bedømmelse\n💥 (senere — genre og beskrivelse)\n\n💬 Kommandoer værdige en Joestar:\n/start — *Påkald standen!*\n/help — *Tilkald visdommens kraft!*",
-		"empty_message": "Hvad er så tomt her, altså? Udvid dit domæne og skriv en anime-titel! Vær nu ikke doven, rebel-chan!",
-		"api_error":     "Der opstod en fejl under søgning. Prøv igen senere, rebel-chan.",
-		"read_error":    "Fejl ved læsning af API-svar. Måske blev serveren træt? Eller leger Kuromi igen?",
-		"json_error":    "Fejl ved fortolkning af JSON-svar fra API. Taler serveren sit hemmelige sprog?",
-		"not_found":     "Anime ikke fundet. Prøv en anden titel — måske noget mere EPISK?",
-		"anime_found":   "🎌 Titel: %s\n⭐ Bedømmelse: %.1f",
-		"lang_changed":  "🌍 Sproget er nu ændret til dansk! Klar til at snakke med mig, rebel-chan? Rødgrød med fløde, huh?! 😏🇩🇰",
-		"random_anime":  "🎲 Tilfældig anime til dig:",
-		"top_anime":     "🏆 Top anime:",
+		"start":          "Hvem tør forstyrre DeusAnimeFlow-botten? 💀\n\nOkay da... Jeg er *Anime Finder Bot*, din personlige mørke guide til anime-verdenen. Skriv en titel, og jeg finder det hurtigere, end du kan sige 'Sugoi'.\n\nMen husk... hvis det er kedelig anime — så fnyster jeg. 😏\n\nLad os søge, rebel-chan!",
+		"help":           "🌀 Du har aktiveret STANDEN *ANIME FINDER*! 🌀\n\nDenne bot er skabt til dem, der søger deres anime-skæbne. Skriv titlen på en anime eller manga — og jeg, din personlige stand, vil give dig:\n🎯 Titel\n📊 Bedømmelse\n💥 (senere — genre og beskrivelse)\n\n💬 Kommandoer værdige en Joestar:\n/start — *Påkald standen!*\n/help — *Tilkald visdommens kraft!*",
+		"empty_message":  "Hvad er så tomt her, altså? Udvid dit domæne og skriv en anime-titel! Vær nu ikke doven, rebel-chan!",
+		"api_error":      "Der opstod en fejl under søgning. Prøv igen senere, rebel-chan.",
+		"read_error":     "Fejl ved læsning af API-svar. Måske blev serveren træt? Eller leger Kuromi igen?",
+		"json_error":     "Fejl ved fortolkning af JSON-svar fra API. Taler serveren sit hemmelige sprog?",
+		"not_found":      "Anime ikke fundet. Prøv en anden titel — måske noget mere EPISK?",
+		"anime_found":    "🎌 Titel: %s\n⭐ Bedømmelse: %.1f",
+		"lang_changed":   "🌍 Sproget er nu ændret til dansk! Klar til at snakke med mig, rebel-chan? Rødgrød med fløde, huh?! 😏🇩🇰",
+		"random_anime":   "🎲 Tilfældig anime til dig:",
+		"top_anime":      "🏆 Top anime:",
+		"donate_message": "💖 Kan du lide botten? Støt skaberen!\n\n🌟 Din energi hjælper os med at vokse og få nye funktioner!\n\nVælg den måde, du vil støtte på:",
+		"donate_thanks":  "💖 Tak for støtten, rebel-chan! Du er mega sej! 🔥",
+		"btn_random":     "🎲 Tilfældig",
+		"btn_top":        "🏆 Top",
+		"btn_search":     "🔄 Ny søgning",
 	},
 }
 
@@ -236,98 +277,109 @@ func Start() {
 		if update.Message != nil {
 			// Проверяем, если это команда для смены языка
 			fmt.Println("Message Received:", update.Message.Text)
-			if update.Message.IsCommand() && update.Message.Command() == "start" {
-				userID := update.Message.From.ID
-				lang := userLangs[userID]
-				if lang == "" {
-					lang = "ua" // По умолчанию украинский
-				}
-				msg := tgbotapi.NewMessage(
-					update.Message.Chat.ID,
-					messages[lang]["start"],
-				)
-				msg.ReplyMarkup = createLanguageKeyboard()
-				bot.Send(msg)
-				// Отправляем приветственное сообщение и берем его из messages map
-			} else if update.Message.IsCommand() && update.Message.Command() == "help" {
-				userID := update.Message.From.ID
-				lang := userLangs[userID]
-				if lang == "" {
-					lang = "ua" // По умолчанию украинский
-				}
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, messages[lang]["help"])
-				bot.Send(msg)
 
-			} else if update.Message.IsCommand() && update.Message.Command() == "random" {
-				userID := update.Message.From.ID
-				lang := userLangs[userID]
-				if lang == "" {
-					lang = "ua" // По умолчанию украинский
-				}
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, getRandomAnime(lang))
-				bot.Send(msg)
-			} else if update.Message.IsCommand() && update.Message.Command() == "top" {
-				userID := update.Message.From.ID
-				lang := userLangs[userID]
-				if lang == "" {
-					lang = "ua" // По умолчанию украинский
-				}
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, getTopAnime(lang))
-				bot.Send(msg)
-
-			} else if !update.Message.IsCommand() {
-				userID := update.Message.From.ID
-				chatID := update.Message.Chat.ID
-				lang := userLangs[userID]
-				if lang == "" {
-					lang = "ua"
-				}
-
-				if update.Message.Text == "" {
-					// если пустой текст
-					msg := tgbotapi.NewMessage(
-						chatID,
-						messages[lang]["empty_message"],
-					)
-					bot.Send(msg)
-				} else {
-					// передаём и query, и lang
-					msg := tgbotapi.NewMessage(
-						chatID,
-						searchAnime(update.Message.Text, lang),
-					)
-					bot.Send(msg)
-				}
-
+			// Получаем общие данные ОДИН РАЗ для всех команд
+			userID := update.Message.From.ID
+			chatID := update.Message.Chat.ID
+			lang := userLangs[userID]
+			if lang == "" {
+				lang = "ua" // По умолчанию украинский
 			}
 
-		}
-		// Обработка нажатий на inline-кнопки
+			var responseText string
+			var keyboard *tgbotapi.InlineKeyboardMarkup
 
+			if update.Message.IsCommand() && update.Message.Command() == "start" {
+				responseText = messages[lang]["start"]
+				languageKeyboard := createLanguageKeyboard()
+				keyboard = &languageKeyboard
+
+			} else if update.Message.IsCommand() && update.Message.Command() == "help" {
+				responseText = messages[lang]["help"]
+				quickKeyboard := createQuickActionsKeyboard()
+				keyboard = &quickKeyboard
+
+			} else if update.Message.IsCommand() && update.Message.Command() == "random" {
+				responseText = getRandomAnime(lang)           // Получаем случайное аниме
+				quickKeyboard := createQuickActionsKeyboard() // Создаём кнопки " Случайное"
+				keyboard = &quickKeyboard                     // Сохраняем указатель на кнопки
+
+			} else if update.Message.IsCommand() && update.Message.Command() == "top" {
+				responseText = getTopAnime(lang)
+				quickKeyboard := createQuickActionsKeyboard()
+				keyboard = &quickKeyboard
+
+			} else if update.Message.IsCommand() && update.Message.Command() == "donate" {
+				responseText = messages[lang]["donate_message"]
+				donateKeyboard := createDonateKeyboard()
+				keyboard = &donateKeyboard
+
+			} else if !update.Message.IsCommand() {
+				if update.Message.Text == "" {
+					responseText = messages[lang]["empty_message"]
+				} else {
+					responseText = searchAnime(update.Message.Text, lang)
+					quickKeyboard := createQuickActionsKeyboard()
+					keyboard = &quickKeyboard
+				}
+			}
+
+			// Единая точка отправки
+			msg := tgbotapi.NewMessage(chatID, responseText)
+			if keyboard != nil {
+				msg.ReplyMarkup = *keyboard
+			}
+			bot.Send(msg)
+		}
+
+		// Обработка нажатий на inline-кнопки
 		if update.CallbackQuery != nil {
 			userID := update.CallbackQuery.From.ID
 			chatID := update.CallbackQuery.Message.Chat.ID
 
-			// Сохраняем выбранный язык
+			lang := userLangs[userID]
+			if lang == "" {
+				lang = "ua"
+			}
+
+			var responseText string
+			var withKeyboard bool
+
 			switch update.CallbackQuery.Data {
 			case "lang_ua":
 				userLangs[userID] = "ua"
+				responseText = messages["ua"]["lang_changed"] + "\n" + messages["ua"]["start"]
+
 			case "lang_en":
 				userLangs[userID] = "en"
+				responseText = messages["en"]["lang_changed"] + "\n" + messages["en"]["start"]
+
 			case "lang_da":
 				userLangs[userID] = "da"
+				responseText = messages["da"]["lang_changed"] + "\n" + messages["da"]["start"]
+
+			case "action_random":
+				responseText = getRandomAnime(lang)
+				withKeyboard = true
+
+			case "action_top":
+				responseText = getTopAnime(lang)
+				withKeyboard = true
+
+			case "action_search":
+				responseText = messages[lang]["empty_message"]
+
+			case "donate_thanks":
+				responseText = messages[lang]["donate_thanks"]
 			}
 
-			// Берём текущий язык пользователя
-			lang := userLangs[userID]
+			msg := tgbotapi.NewMessage(chatID, responseText)
 
-			// Отправляем подтверждение смены языка
-			msg := tgbotapi.NewMessage(chatID, messages[lang]["lang_changed"])
+			if withKeyboard {
+				msg.ReplyMarkup = createQuickActionsKeyboard()
+			}
+
 			bot.Send(msg)
-
-			// Отправляем приветствие на новом языке
-			greet := tgbotapi.NewMessage(chatID, messages[lang]["start"])
-			bot.Send(greet)
 		}
 	}
 }
