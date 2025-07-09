@@ -12,39 +12,40 @@ import (
 )
 
 // тут будет запрос к API аниме и манги
-func searchAnime(query string, lang string) string {
+func searchAnime(query string, lang string) AnimeData {
 	url := fmt.Sprintf("https://api.jikan.moe/v4/anime?q=%s&limit=1", query)
 	response, err := http.Get(url)
 	if err != nil {
 		log.Println("Error fetching data from Jikan API:", err)
-		return messages[lang]["api_error"]
+		return AnimeData{Title: messages[lang]["api_error"]}
 	}
 
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return messages[lang]["read_error"]
+		return AnimeData{Title: messages[lang]["read_error"]}
 	}
 	var result JikanResponse
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return messages[lang]["json_error"]
+		return AnimeData{Title: messages[lang]["json_error"]}
 	}
 	if len(result.Data) == 0 {
-		return messages[lang]["not_found"]
+		return AnimeData{Title: messages[lang]["not_found"]}
 	}
 
 	anime := result.Data[0]
-	return formatAnimeDetails(anime, lang)
+
+	return anime
 }
 
-func getRandomAnime(lang string) string {
+func getRandomAnime(lang string) AnimeData {
 	url := "https://api.jikan.moe/v4/random/anime"
 	response, err := http.Get(url)
 	if err != nil {
 		log.Println("Error fetching random anime from Jikan API:", err)
-		return messages[lang]["api_error"]
+		return AnimeData{Title: messages[lang]["api_error"]}
 	}
 
 	defer response.Body.Close()
@@ -52,16 +53,16 @@ func getRandomAnime(lang string) string {
 	body, err := io.ReadAll(response.Body)
 
 	if err != nil {
-		return messages[lang]["read_error"]
+		return AnimeData{Title: messages[lang]["read_error"]}
 	}
 	// Структура для случайного аниме ответа
 	var result RandomAnimeResponse
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return messages[lang]["json_error"]
+		return AnimeData{Title: messages[lang]["json_error"]}
 	}
 	anime := result.Data
-	return formatAnimeDetails(anime, lang)
+	return anime
 }
 
 // AnimeData Структура для разбора ответа от Jikan API
@@ -72,12 +73,27 @@ type AnimeData struct {
 	Episodes int     `json:"episodes"`
 	Status   string  `json:"status"`
 	Genres   []Genre `json:"genres"`
+	Images   Images  `json:"images"`
+}
+
+// Структура для хранения аналитики
+type Analytics struct {
+	TotalUsers    int            `json:"total_users"`
+	CommandsUsed  map[string]int `json:"commands_used"`
+	LanguagesUsed map[string]int `json:"languages_used"`
 }
 
 type Genre struct {
 	Name string `json:"name"`
 }
 
+type Images struct {
+	JPG ImageData `json:"jpg"`
+}
+
+type ImageData struct {
+	LargeImageURL string `json:"large_image_url"`
+}
 type JikanResponse struct {
 	Data []AnimeData `json:"data"`
 }
@@ -190,6 +206,47 @@ func formatAnimeDetails(anime AnimeData, lang string) string {
 	)
 }
 
+// Отправляет аниме с картинкой
+func sendAnimeWithPhoto(bot *tgbotapi.BotAPI, chatID int64, anime AnimeData, lang string, keyboard *tgbotapi.InlineKeyboardMarkup) {
+	caption := formatAnimeDetails(anime, lang)
+
+	if anime.Images.JPG.LargeImageURL != "" {
+		// Отправляем фото с описанием
+		photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(anime.Images.JPG.LargeImageURL))
+		photo.Caption = caption
+		if keyboard != nil {
+			photo.ReplyMarkup = *keyboard
+		}
+		bot.Send(photo)
+	} else {
+		// Если нет картинки, отправляем обычное сообщение
+		msg := tgbotapi.NewMessage(chatID, caption)
+		if keyboard != nil {
+			msg.ReplyMarkup = *keyboard
+		}
+		bot.Send(msg)
+	}
+}
+
+// Логирует действие пользователя для аналитики
+func logUserAction(userID int64, action string, lang string) {
+	// Проверяем, новый ли это пользователь
+	if !knownUsers[userID] {
+		knownUsers[userID] = true
+		botAnalytics.TotalUsers++
+		fmt.Printf("📊 Новый пользователь! Всего: %d\n", botAnalytics.TotalUsers)
+	}
+
+	// Считаем использование команд
+	botAnalytics.CommandsUsed[action]++
+
+	// Считаем использование языков
+	botAnalytics.LanguagesUsed[lang]++
+
+	fmt.Printf("📊 Действие: %s, Язык: %s, Всего команд '%s': %d\n",
+		action, lang, action, botAnalytics.CommandsUsed[action])
+}
+
 // Тексты на разных языках
 var messages = map[string]map[string]string{
 	"ua": {
@@ -248,6 +305,15 @@ var messages = map[string]map[string]string{
 	},
 }
 
+// Глобальная аналитика
+var botAnalytics = Analytics{
+	TotalUsers:    0,
+	CommandsUsed:  make(map[string]int),
+	LanguagesUsed: make(map[string]int),
+}
+
+var knownUsers = make(map[int64]bool) // Для отслеживания уникальных пользователей
+
 func Start() {
 
 	err := godotenv.Load()
@@ -271,7 +337,7 @@ func Start() {
 	u.Timeout = 60
 
 	updates := bot.GetUpdatesChan(u)
-	userLangs := make(map[int64]string) // userID -> выбранный язык
+	userLangs := make(map[int64]string) // userID -> выбр��нный язык
 
 	for update := range updates {
 		if update.Message != nil {
@@ -290,26 +356,32 @@ func Start() {
 			var keyboard *tgbotapi.InlineKeyboardMarkup
 
 			if update.Message.IsCommand() && update.Message.Command() == "start" {
+				logUserAction(userID, "start", lang)
 				responseText = messages[lang]["start"]
 				languageKeyboard := createLanguageKeyboard()
 				keyboard = &languageKeyboard
 
 			} else if update.Message.IsCommand() && update.Message.Command() == "help" {
+				logUserAction(userID, "help", lang)
 				responseText = messages[lang]["help"]
-				quickKeyboard := createQuickActionsKeyboard()
+				quickKeyboard := createQuickActionsKeyboard(lang)
 				keyboard = &quickKeyboard
 
 			} else if update.Message.IsCommand() && update.Message.Command() == "random" {
-				responseText = getRandomAnime(lang)           // Получаем случайное аниме
-				quickKeyboard := createQuickActionsKeyboard() // Создаём кнопки " Случайное"
-				keyboard = &quickKeyboard                     // Сохраняем указатель на кнопки
+				logUserAction(userID, "random", lang)
+				anime := getRandomAnime(lang)
+				quickKeyboard := createQuickActionsKeyboard(lang)
+				sendAnimeWithPhoto(bot, chatID, anime, lang, &quickKeyboard)
+				continue
 
 			} else if update.Message.IsCommand() && update.Message.Command() == "top" {
+				logUserAction(userID, "top", lang)
 				responseText = getTopAnime(lang)
-				quickKeyboard := createQuickActionsKeyboard()
+				quickKeyboard := createQuickActionsKeyboard(lang)
 				keyboard = &quickKeyboard
 
 			} else if update.Message.IsCommand() && update.Message.Command() == "donate" {
+				logUserAction(userID, "donate", lang)
 				responseText = messages[lang]["donate_message"]
 				donateKeyboard := createDonateKeyboard()
 				keyboard = &donateKeyboard
@@ -318,9 +390,11 @@ func Start() {
 				if update.Message.Text == "" {
 					responseText = messages[lang]["empty_message"]
 				} else {
-					responseText = searchAnime(update.Message.Text, lang)
-					quickKeyboard := createQuickActionsKeyboard()
-					keyboard = &quickKeyboard
+					logUserAction(userID, "search", lang)
+					anime := searchAnime(update.Message.Text, lang)
+					quickKeyboard := createQuickActionsKeyboard(lang)
+					sendAnimeWithPhoto(bot, chatID, anime, lang, &quickKeyboard)
+					continue
 				}
 			}
 
@@ -347,26 +421,34 @@ func Start() {
 
 			switch update.CallbackQuery.Data {
 			case "lang_ua":
+				logUserAction(userID, "lang_change", "ua")
 				userLangs[userID] = "ua"
 				responseText = messages["ua"]["lang_changed"] + "\n" + messages["ua"]["start"]
 
 			case "lang_en":
+				logUserAction(userID, "lang_change", "en")
 				userLangs[userID] = "en"
 				responseText = messages["en"]["lang_changed"] + "\n" + messages["en"]["start"]
 
 			case "lang_da":
+				logUserAction(userID, "lang_change", "da")
 				userLangs[userID] = "da"
 				responseText = messages["da"]["lang_changed"] + "\n" + messages["da"]["start"]
 
 			case "action_random":
-				responseText = getRandomAnime(lang)
-				withKeyboard = true
+				logUserAction(userID, "random", lang)
+				anime := getRandomAnime(lang)
+				quickKeyboard := createQuickActionsKeyboard(lang)
+				sendAnimeWithPhoto(bot, chatID, anime, lang, &quickKeyboard)
+				continue
 
 			case "action_top":
+				logUserAction(userID, "random", lang)
 				responseText = getTopAnime(lang)
 				withKeyboard = true
 
 			case "action_search":
+				logUserAction(userID, "top", lang)
 				responseText = messages[lang]["empty_message"]
 
 			case "donate_thanks":
@@ -376,7 +458,7 @@ func Start() {
 			msg := tgbotapi.NewMessage(chatID, responseText)
 
 			if withKeyboard {
-				msg.ReplyMarkup = createQuickActionsKeyboard()
+				msg.ReplyMarkup = createQuickActionsKeyboard(lang)
 			}
 
 			bot.Send(msg)
