@@ -13,6 +13,16 @@ import (
 
 const jikanBaseURL = "https://api.jikan.moe/v4"
 
+// Константы для команд бота
+const (
+	cmdStart  = "start"
+	cmdHelp   = "help"
+	cmdRandom = "random"
+	cmdTop    = "top"
+	cmdDonate = "donate"
+	cmdStats  = "stats"
+)
+
 // Универсальная функция
 func fetchAndUnmarshal(url string, target interface{}) error {
 	response, err := http.Get(url)
@@ -29,18 +39,30 @@ func fetchAndUnmarshal(url string, target interface{}) error {
 	return json.Unmarshal(body, target)
 }
 
+// Централизованная обработка ошибок API
+func handleAPIError(lang, errType string) AnimeData {
+	return AnimeData{Title: messages[lang][errType]}
+}
+
+// Централизованное логирование запросов
+func logRequest(operation string, err error) {
+	if err != nil {
+		log.Printf("Error in %s: %v", operation, err)
+	}
+}
+
 // тут будет запрос к API аниме и манги
 func searchAnime(query string, lang string) AnimeData {
 	url := fmt.Sprintf("%s/anime?q=%s&limit=1", jikanBaseURL, query)
 
 	var result JikanResponse
 	if err := fetchAndUnmarshal(url, &result); err != nil {
-		log.Println("Error in searchAnime:", err)
-		return AnimeData{Title: messages[lang]["api_error"]}
+		logRequest("searchAnime", err)
+		return handleAPIError(lang, "api_error")
 	}
 
 	if len(result.Data) == 0 {
-		return AnimeData{Title: messages[lang]["not_found"]}
+		return handleAPIError(lang, "not_found")
 	}
 
 	return result.Data[0]
@@ -51,8 +73,8 @@ func getRandomAnime(lang string) AnimeData {
 
 	var result RandomAnimeResponse
 	if err := fetchAndUnmarshal(url, &result); err != nil {
-		log.Println("Error in getRandomAnime:", err)
-		return AnimeData{Title: messages[lang]["api_error"]}
+		logRequest("getRandomAnime", err)
+		return handleAPIError(lang, "api_error")
 	}
 
 	return result.Data
@@ -139,7 +161,7 @@ func getTopAnime(lang string) string {
 
 	var result JikanResponse
 	if err := fetchAndUnmarshal(url, &result); err != nil {
-		log.Println("Error in getTopAnime:", err)
+		logRequest("getTopAnime", err)
 		return messages[lang]["api_error"]
 	}
 
@@ -339,38 +361,38 @@ func Start() {
 			var responseText string
 			var keyboard *tgbotapi.InlineKeyboardMarkup
 
-			if update.Message.IsCommand() && update.Message.Command() == "start" {
+			if update.Message.IsCommand() && update.Message.Command() == cmdStart {
 				logUserAction(userID, "start", lang)
 				responseText = messages[lang]["start"]
 				languageKeyboard := createLanguageKeyboard()
 				keyboard = &languageKeyboard
 
-			} else if update.Message.IsCommand() && update.Message.Command() == "help" {
+			} else if update.Message.IsCommand() && update.Message.Command() == cmdHelp {
 				logUserAction(userID, "help", lang)
 				responseText = messages[lang]["help"]
 				quickKeyboard := createQuickActionsKeyboard(lang)
 				keyboard = &quickKeyboard
 
-			} else if update.Message.IsCommand() && update.Message.Command() == "random" {
+			} else if update.Message.IsCommand() && update.Message.Command() == cmdRandom {
 				logUserAction(userID, "random", lang)
 				anime := getRandomAnime(lang)
 				quickKeyboard := createQuickActionsKeyboard(lang)
 				sendAnimeWithPhoto(bot, chatID, anime, lang, &quickKeyboard)
 				continue
 
-			} else if update.Message.IsCommand() && update.Message.Command() == "top" {
+			} else if update.Message.IsCommand() && update.Message.Command() == cmdTop {
 				logUserAction(userID, "top", lang)
 				responseText = getTopAnime(lang)
 				quickKeyboard := createQuickActionsKeyboard(lang)
 				keyboard = &quickKeyboard
 
-			} else if update.Message.IsCommand() && update.Message.Command() == "donate" {
+			} else if update.Message.IsCommand() && update.Message.Command() == cmdDonate {
 				logUserAction(userID, "donate", lang)
 				responseText = messages[lang]["donate_message"]
 				donateKeyboard := createDonateKeyboard()
 				keyboard = &donateKeyboard
 
-			} else if update.Message.IsCommand() && update.Message.Command() == "stats" {
+			} else if update.Message.IsCommand() && update.Message.Command() == cmdStats {
 				logUserAction(userID, "stats", lang)
 				statsText := fmt.Sprintf("📊 СТАТИСТИКА БОТА:\n\n👥 Всего пользователей: %d\n\n📈 Популярные команды:\n", botAnalytics.TotalUsers)
 
