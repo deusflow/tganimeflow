@@ -11,58 +11,51 @@ import (
 	"os"
 )
 
-// тут будет запрос к API аниме и манги
-func searchAnime(query string, lang string) AnimeData {
-	url := fmt.Sprintf("https://api.jikan.moe/v4/anime?q=%s&limit=1", query)
+const jikanBaseURL = "https://api.jikan.moe/v4"
+
+// Универсальная функция
+func fetchAndUnmarshal(url string, target interface{}) error {
 	response, err := http.Get(url)
 	if err != nil {
-		log.Println("Error fetching data from Jikan API:", err)
-		return AnimeData{Title: messages[lang]["api_error"]}
+		return fmt.Errorf("error fetching data: %w", err)
 	}
-
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return AnimeData{Title: messages[lang]["read_error"]}
+		return fmt.Errorf("error reading response: %w", err)
 	}
+
+	return json.Unmarshal(body, target)
+}
+
+// тут будет запрос к API аниме и манги
+func searchAnime(query string, lang string) AnimeData {
+	url := fmt.Sprintf("%s/anime?q=%s&limit=1", jikanBaseURL, query)
+
 	var result JikanResponse
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return AnimeData{Title: messages[lang]["json_error"]}
+	if err := fetchAndUnmarshal(url, &result); err != nil {
+		log.Println("Error in searchAnime:", err)
+		return AnimeData{Title: messages[lang]["api_error"]}
 	}
+
 	if len(result.Data) == 0 {
 		return AnimeData{Title: messages[lang]["not_found"]}
 	}
 
-	anime := result.Data[0]
-
-	return anime
+	return result.Data[0]
 }
 
 func getRandomAnime(lang string) AnimeData {
-	url := "https://api.jikan.moe/v4/random/anime"
-	response, err := http.Get(url)
-	if err != nil {
-		log.Println("Error fetching random anime from Jikan API:", err)
+	url := fmt.Sprintf("%s/random/anime", jikanBaseURL)
+
+	var result RandomAnimeResponse
+	if err := fetchAndUnmarshal(url, &result); err != nil {
+		log.Println("Error in getRandomAnime:", err)
 		return AnimeData{Title: messages[lang]["api_error"]}
 	}
 
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-
-	if err != nil {
-		return AnimeData{Title: messages[lang]["read_error"]}
-	}
-	// Структура для случайного аниме ответа
-	var result RandomAnimeResponse
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return AnimeData{Title: messages[lang]["json_error"]}
-	}
-	anime := result.Data
-	return anime
+	return result.Data
 }
 
 // AnimeData Структура для разбора ответа от Jikan API
@@ -142,24 +135,12 @@ func createDonateKeyboard() tgbotapi.InlineKeyboardMarkup {
 }
 
 func getTopAnime(lang string) string {
-	url := "https://api.jikan.moe/v4/top/anime?limit=5"
-	response, err := http.Get(url)
-	if err != nil {
-		log.Println("Error fetching top anime from Jikan API:", err)
-		return messages[lang]["api_error"]
-	}
-
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return messages[lang]["read_error"]
-	}
+	url := fmt.Sprintf("%s/top/anime?limit=5", jikanBaseURL)
 
 	var result JikanResponse
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return messages[lang]["json_error"]
+	if err := fetchAndUnmarshal(url, &result); err != nil {
+		log.Println("Error in getTopAnime:", err)
+		return messages[lang]["api_error"]
 	}
 
 	if len(result.Data) == 0 {
@@ -266,6 +247,7 @@ var messages = map[string]map[string]string{
 		"btn_random":     "🎲 Випадкове",
 		"btn_top":        "🏆 Топ",
 		"btn_search":     "🔄 Новий пошук",
+		"stats":          "📊 Статистика",
 	},
 	"en": {
 		"start":          "Hmm... Who dares to disturb the DeusAnimeFlow bot? 💀\n\nAlright... I'm *Anime Finder Bot*, your personal dark guide to the anime world. Write a title, and I'll find it faster than you can say 'Sugoi'.\n\nBut remember... if it's boring anime — I'll snort. 😏\n\nLet's go searching, rebel-chan!",
@@ -284,6 +266,7 @@ var messages = map[string]map[string]string{
 		"btn_random":     "🎲 Random",
 		"btn_top":        "🏆 Top",
 		"btn_search":     "🔄 New search",
+		"stats":          "📊 Statistics",
 	},
 	"da": {
 		"start":          "Hvem tør forstyrre DeusAnimeFlow-botten? 💀\n\nOkay da... Jeg er *Anime Finder Bot*, din personlige mørke guide til anime-verdenen. Skriv en titel, og jeg finder det hurtigere, end du kan sige 'Sugoi'.\n\nMen husk... hvis det er kedelig anime — så fnyster jeg. 😏\n\nLad os søge, rebel-chan!",
@@ -302,6 +285,7 @@ var messages = map[string]map[string]string{
 		"btn_random":     "🎲 Tilfældig",
 		"btn_top":        "🏆 Top",
 		"btn_search":     "🔄 Ny søgning",
+		"stats":          "📊 Statistik",
 	},
 }
 
@@ -386,6 +370,21 @@ func Start() {
 				donateKeyboard := createDonateKeyboard()
 				keyboard = &donateKeyboard
 
+			} else if update.Message.IsCommand() && update.Message.Command() == "stats" {
+				logUserAction(userID, "stats", lang)
+				statsText := fmt.Sprintf("📊 СТАТИСТИКА БОТА:\n\n👥 Всего пользователей: %d\n\n📈 Популярные команды:\n", botAnalytics.TotalUsers)
+
+				for command, count := range botAnalytics.CommandsUsed {
+					statsText += fmt.Sprintf("• %s: %d раз\n", command, count)
+				}
+
+				statsText += "\n🌍 Языки:\n"
+				for language, count := range botAnalytics.LanguagesUsed {
+					statsText += fmt.Sprintf("• %s: %d раз\n", language, count)
+				}
+
+				responseText = statsText
+
 			} else if !update.Message.IsCommand() {
 				if update.Message.Text == "" {
 					responseText = messages[lang]["empty_message"]
@@ -443,15 +442,16 @@ func Start() {
 				continue
 
 			case "action_top":
-				logUserAction(userID, "random", lang)
+				logUserAction(userID, "top", lang)
 				responseText = getTopAnime(lang)
 				withKeyboard = true
 
 			case "action_search":
-				logUserAction(userID, "top", lang)
+				logUserAction(userID, "search_help", lang)
 				responseText = messages[lang]["empty_message"]
 
 			case "donate_thanks":
+				logUserAction(userID, "donate_thanks", lang)
 				responseText = messages[lang]["donate_thanks"]
 			}
 
