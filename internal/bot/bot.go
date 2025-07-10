@@ -522,6 +522,12 @@ func Start() {
 				quickKeyboard := createQuickActionsKeyboard(lang)
 				keyboard = &quickKeyboard
 
+			case "donate":
+				logUserAction(userID, "donate", lang)
+				responseText = messages[lang]["donate_message"]
+				donateKeyboard := createDonateKeyboard()
+				keyboard = &donateKeyboard
+
 			case "donate_thanks":
 				logUserAction(userID, "donate_thanks", lang)
 				responseText = messages[lang]["donate_thanks"]
