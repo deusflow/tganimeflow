@@ -306,19 +306,19 @@ func Start() {
 	u.Timeout = 60
 
 	updates := bot.GetUpdatesChan(u)
-	userLangs := make(map[int64]string) // userID -> выбр���нный язык
+	userLangs := make(map[int64]string) // userID -> язык
 
 	for update := range updates {
 		if update.Message != nil {
 			// Проверяем, если это команда для смены языка
 			fmt.Println("Message Received:", update.Message.Text)
 
-			// Получаем общие данн����е ОДИН РАЗ для всех команд
+			// Получаем общие данные ОДИН РАЗ для всех команд
 			userID := update.Message.From.ID
 			chatID := update.Message.Chat.ID
 			lang := userLangs[userID]
 			if lang == "" {
-				lang = "ua" // По умолчанию українс���ий
+				lang = "ua" // По умолчанию укр
 			}
 
 			var responseText string
@@ -328,7 +328,7 @@ func Start() {
 				logUserAction(userID, "start", lang)
 				responseText = messages[lang]["start"]
 
-				// Если язы�� уже выбран, показываем кнопки д��йствий, иначе выбор языка
+				// Если язы�� уже выбран, показываем кнопки действий, иначе выбор языка
 				if userLangs[userID] != "" {
 					quickKeyboard := createQuickActionsKeyboard(lang)
 					keyboard = &quickKeyboard
