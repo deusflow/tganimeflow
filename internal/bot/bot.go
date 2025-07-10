@@ -375,7 +375,7 @@ func Start() {
 
 			} else if update.Message.IsCommand() && update.Message.Command() == cmdStats {
 				logUserAction(userID, "stats", lang)
-				statsText := fmt.Sprintf("📊 СТАТИСТИКА БОТА:\n\n👥 Всего польз��вателей: %d\n\n📈 Популярные команды:\n", botAnalytics.TotalUsers)
+				statsText := fmt.Sprintf("📊 СТАТИСТИКА БОТА:\n\n👥 Всего пользователей: %d\n\n📈 Популярные команды:\n", botAnalytics.TotalUsers)
 
 				for command, count := range botAnalytics.CommandsUsed {
 					statsText += fmt.Sprintf("• %s: %d раз\n", command, count)
