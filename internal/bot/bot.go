@@ -287,11 +287,12 @@ func Start() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Panic("Loading error .env file")
+		log.Println("No .env file found, using system environment variables")
 	}
+
 	token := os.Getenv("TELEGRAM_TOKEN")
 	if token == "" {
-		log.Panic("TELEGRAM_TOKEN not found in .env")
+		log.Panic("TELEGRAM_TOKEN not found in environment variables")
 	}
 	fmt.Println("Bot started")
 

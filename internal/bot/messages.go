@@ -22,7 +22,7 @@ var messages = map[string]map[string]string{
 		"stats":           "📊 Статистика",
 		"btn_top_popular": "🔥 Супер-дупер популярне", // или "Top Popular", "Mest populære"
 		"btn_top_season":  "🍂 Вибір сезону",          // или "Top Season", "Sæsonens top"
-		"btn_top_year":    "🗓 Ультиматум цього року", // или "Top Year", "Årets top"
+		"btn_top_year":    "🌟 Ультиматум цього року", // или "Top Year", "Årets top"
 		"top_popular":     "🔥 На хайпі та на флексі:",
 		"top_season":      "🍂 Сезонна бімба:",
 		"top_year":        "🌟 Топ аніме року:",
@@ -47,7 +47,7 @@ var messages = map[string]map[string]string{
 		"stats":           "📊 Statistics",
 		"btn_top_popular": "🔥 Super Duper Popular!",
 		"btn_top_season":  "🍂 Season’s Spicy Picks!",
-		"btn_top_year":    "🗓 Ultimate Yearly Legends!",
+		"btn_top_year":    "🌟 Ultimate Yearly Legends!",
 		"top_popular":     "🔥 The most hyped anime in the multiverse:",
 		"top_season":      "🍂 The seasonal bangers you can’t miss:",
 		"top_year":        "🌟 The anime GOATs of the year:",
@@ -72,7 +72,7 @@ var messages = map[string]map[string]string{
 		"stats":           "📊 Statistik",
 		"btn_top_popular": "🔥 Megapopulære hits!",
 		"btn_top_season":  "🍂 Årstidens varmeste sager!",
-		"btn_top_year":    "🗓 Årets anime-legender!",
+		"btn_top_year":    "🌟 Årets anime-legender!",
 		"top_popular":     "🔥 De mest hypede anime i hele galaksen:",
 		"top_season":      "🍂 Sæsonens saftigste anime-perler:",
 		"top_year":        "👑 Årets ultimative anime-champs:",
