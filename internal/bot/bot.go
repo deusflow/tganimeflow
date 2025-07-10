@@ -99,6 +99,9 @@ func createQuickActionsKeyboard(lang string) tgbotapi.InlineKeyboardMarkup {
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(messages[lang]["btn_top_year"], "action_top_year"),
 		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(messages[lang]["btn_donate"], "donate"),
+		),
 	)
 }
 

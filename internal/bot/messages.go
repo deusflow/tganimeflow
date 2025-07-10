@@ -3,8 +3,8 @@ package bot
 // Тексты на разных языках
 var messages = map[string]map[string]string{
 	"ua": {
-		"start":           "Хмм... Хіто тут такий сміливий, щоб відволікати могутнього DeusAnimeFlow бота? 💀\n\nНу доообре... Я — *Anime Finder Bot*, твій особистий таємний провідник у пітьму. Напиши назву, та я знайду його швидше, ніж ти вигукнеш 'Sugoi'.\n\n на нудні аніме - фиркаю 😏\n\n Погнали, rebel-чан!",
-		"help":            "🌀 Ти акти��ував СТЕНД *ANIME FINDER*! 🌀\n\nЭтот бот создан для тех, кто ищет своє аниме-предназначення. Напиши название аниме или манги — и Я, твой персональный сте��д, выдам тебе:\n🎯 Название\n📊 Рейтинг\n💥 (в будущем — жанр и описание)\n\n💬 Команды, достойные Джостара:\n/start — *Призови стенд!*\n/help — *Вызови силу мудрости!*",
+		"start":           "\nАле... Хіто тут такий сміливий, щоб відволікати могутнього DeusAnimeFlow бота? 💀\n\nНу добре... Я - твій особистий таємний провідник у пітьму. Напиши назву - знайду швидше, ніж ти вигукнеш 'Sugoi'.\n\n на нудні аніме - фиркаю 😏\n\n",
+		"help":            "🌀 Ти активував СТЕНД *ANIME FINDER*! 🌀\n\nЦей бот створений дли тих, хто шукає своє аніме-призначення. Я - твій персональній СТЕНД:\n🎯 Назва\n📊 Рейтинг\n💥 \n\n💬 Команди  Джостара:\n/start — *Викликай СТЕНД!*\n/help — *Сила моєї мудрості!*",
 		"empty_message":   "А щож тут так пусто, трясця богу? Розширь свої володіння, напиши назву ��німе і я його знайду! Не будь таким ледащим, rebel-чан!",
 		"api_error":       "Сталася помилка при пошуку аніме. Спробуй пізніше, rebel-чан.",
 		"read_error":      "Помилка читання відповіді в��д API. Може, сервер втомився? Чи це Kuromi знову шалить?",
@@ -18,6 +18,7 @@ var messages = map[string]map[string]string{
 		"donate_thanks":   "💖 Дякую за підтримку, rebel-чан! Ти крутий! 🔥",
 		"btn_random":      "🎲 Випадкове",
 		"btn_top":         "🏆 Топ (всіх часів)",
+		"btn_donate":      "💸 Donate",
 		"btn_search":      "🔄 Новий пошук",
 		"stats":           "📊 Статистика",
 		"btn_top_popular": "🔥 Супер-дупер популярне", // или "Top Popular", "Mest populære"
@@ -28,8 +29,8 @@ var messages = map[string]map[string]string{
 		"top_year":        "🌟 Топ аніме року:",
 	},
 	"en": {
-		"start":           "Hmm... Who dares to disturb the DeusAnimeFlow bot? 💀\n\nAlright... I'm *Anime Finder Bot*, your personal dark guide to the anime world. Write a title, and I'll find it faster than you can say 'Sugoi'.\n\nBut remember... if it's boring anime — I'll snort. 😏\n\nLet's go searching, rebel-chan!",
-		"help":            "🌀 You activated STAND *ANIME FINDER*! \n\nThis bot is created for those who seek their anime destiny. Write anime or manga title — and I, your personal stand, will give you:\n🎯 Title\n📊 Rating\n💥 (in future — genre and description)\n\n💬 Commands worthy of Joestar:\n/start — *Summon the stand!*\n/help — *Call the power of wisdom!*",
+		"start":           "\nBut... Who dares to disturb the DeusAnimeFlow bot? 💀\n\nAlright... I'm *Anime Finder Bot*, your personal dark guide to the anime world. Write a title, and I'll find it faster than you can say 'Sugoi'.\n\nBut remember... if it's boring anime — I'll snort. 😏\n\n",
+		"help":            "🌀 You activated STAND *ANIME FINDER*! \n\nThis bot is created for those who seek their anime destiny. Write anime or manga title — and I, your personal stand, will give you:\n🎯 Title\n📊 Rating\n💥 \n\n💬 Commands worthy of Joestar:\n/start — *Summon the stand!*\n/help — *Call the power of wisdom!*",
 		"empty_message":   "What's so empty here, for crying out loud? Expand your domain, write anime title and I'll find it! Don't be so lazy, rebel-chan!",
 		"api_error":       "Error occurred while searching anime. Try later, rebel-chan.",
 		"read_error":      "Error reading API response. Maybe server got tired? Or is Kuromi messing around again?",
@@ -43,6 +44,7 @@ var messages = map[string]map[string]string{
 		"donate_thanks":   "💖 Arigato for your support, rebel-chan! You're awesome! 🔥",
 		"btn_random":      "🎲 Random",
 		"btn_top":         "🏆 Top",
+		"btn_donate":      "💸 Donate",
 		"btn_search":      "New search",
 		"stats":           "📊 Statistics",
 		"btn_top_popular": "🔥 Super Duper Popular!",
@@ -53,7 +55,7 @@ var messages = map[string]map[string]string{
 		"top_year":        "🌟 The anime GOATs of the year:",
 	},
 	"da": {
-		"start":           "Hvem tør forstyrre DeusAnimeFlow-botten? 💀\n\nOkay da... Jeg er *Anime Finder Bot*, din personlige mørke guide til anime-verdenen. Skriv en titel, og jeg finder det hurtigere, end du kan sige 'Sugoi'.\n\nMen husk... hvis det er kedelig anime — så fnyster jeg. 😏\n\nLad os søge, rebel-chan!",
+		"start":           "\nMeeeen...Hvem tør forstyrre DeusAnimeFlow-botten? 💀\n\nOkay da... Jeg er *Anime Finder Bot*, din personlige mørke guide til anime-verdenen. Skriv en titel, og jeg finder det hurtigere, end du kan sige 'Sugoi'.\n\nMen husk... hvis det er kedelig anime — så fnyster jeg. 😏\n\nLad os søge, rebel-chan!",
 		"help":            "🌀 Du har aktiveret STANDEN *ANIME FINDER*! 🌀\n\nDenne bot er skabt til dem, der søger deres anime-skæbne. Skriv titlen på en anime eller manga — og jeg, din personlige stand, vil give dig:\n🎯 Titel\n📊 Bedømmelse\n💥 (senere genre og beskrivelse)\n\n💬 Kommandoer værdige en Joestar:\n/start — *Påkald standen!*\n/help — *Tilkald visdommens kraft!*",
 		"empty_message":   "Hvad er så tomt her, altså? Udvid dit domæne og skriv en anime-titel! Vær nu ikke doven, rebel-chan!",
 		"api_error":       "Der opstod en fejl under søgning. Prøv igen senere, rebel-chan.",
@@ -68,6 +70,7 @@ var messages = map[string]map[string]string{
 		"donate_thanks":   "�� Tak for støtten, rebel-chan! Du er mega sej! 🔥",
 		"btn_random":      "🎲 Tilfældig",
 		"btn_top":         "🏆 Top",
+		"btn_donate":      "💸 Donate",
 		"btn_search":      "🔄 Ny søgning",
 		"stats":           "📊 Statistik",
 		"btn_top_popular": "🔥 Megapopulære hits!",
